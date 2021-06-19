@@ -27,21 +27,21 @@ This signer operates within the [kubernetes certificate signing request API](htt
 4. Install kubectl, helm, and their dependencies if not already present.
 
 5. Open credentials/credentials.yaml and enter the following information:
-# Endpoint of Keyfactor Platform
+\# Endpoint of Keyfactor Platform
 endPoint: "http://192.168.0.24"
-# Name of certificate authority for enrollment
+\# Name of certificate authority for enrollment
 caName: "Keyfactor.thedemodrive.com\\Keyfactor Test Drive CA 2 "
-# Basic auth credentials for authentication header: "Basic ...."
+\# Basic auth credentials for authentication header: "Basic ...."
 authToken: "Basic RE9NQUlOXFVzZXI6UGFzc3dvcmQ="
-# API path to enroll new certificate from Keyfactor
+\# API path to enroll new certificate from Keyfactor
 enrollPath: "/KeyfactorAPI/Enrollment/CSR"
-# Certificate Template for Istio certificate enrollment
+\# Certificate Template for Istio certificate enrollment
 caTemplate: "KubernetesNode"
-# ApiKey from Api Setting, to enroll certificates for Istio
+\# ApiKey from Api Setting, to enroll certificates for Istio
 appKey: "uYl+FKUbuFpRWg=="
-# ApiKey for auto provisioning TLS server / client certificates
+\# ApiKey for auto provisioning TLS server / client certificates
 provisioningAppKey: "uYl+FKUbuFpRWg=="
-# CA Template for auto provisioning TLS server / client certificates
+\# CA Template for auto provisioning TLS server / client certificates
 provisioningTemplate: "KubernetesNode"
 
 6. Create the keyfactor namespace with these credentials as a secret:
