@@ -1,0 +1,38 @@
+Thank you for installing Keyfactor Kubernetes Proxy
+Your release is named {{ .Release.Name }}.
+
+- <REPLACE_ADDRESS>: {{ include "charts.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+- <REPLACE_PORT>: {{ .Values.service.port }}
+- <REPLACE_SECRET_NAME>: {{ .Values.keyfactor.istioSecretName }}
+
+------------- [istio-config.yaml] ----------------
+
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: {{ .Values.keyfactor.istioNamespace }}
+spec:
+  hub: thedemodrive
+  tag: 1.8-keyfactor
+  installPackagePath: "charts"
+  profile: "demo"
+  values:
+    pilot:
+      secretVolumes:
+        - name: {{ .Values.keyfactor.istioSecretName }}
+          secretName: {{ .Values.keyfactor.istioSecretName }}
+          mountPath: /etc/istio/{{ .Values.keyfactor.istioSecretName }}
+  meshConfig:
+    ca:
+      istiodSide: true
+      address: "{{ include "charts.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}"
+      requestTimeout: 30s
+      tlsSettings:
+        mode: MUTUAL
+        clientCertificate: "/etc/istio/{{ .Values.keyfactor.istioSecretName }}/client-cert.pem"
+        privateKey: "/etc/istio/{{ .Values.keyfactor.istioSecretName }}/client-key.pem"
+        caCertificates: "/etc/istio/{{ .Values.keyfactor.istioSecretName }}/cacert.pem"
+        sni: "{{ include "charts.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+        subjectAltNames: []
+
+------------------- END ----------------

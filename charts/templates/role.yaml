@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "charts.role" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "charts.labels" . | nindent 4 }}
+rules:
+# For storing TLS CA secret
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create", "get", "watch", "list", "update", "delete"]

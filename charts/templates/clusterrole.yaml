@@ -1,0 +1,34 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "charts.clusterRole" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "charts.labels" . | nindent 4 }}
+rules:
+  # For storing TLS CA secret
+  - apiGroups: [""]
+    resources: ["secrets", "namespaces"]
+    verbs: ["create", "get", "watch", "list", "update", "delete"]
+  # configuration validation webhook controller
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingwebhookconfigurations"]
+    verbs: ["get", "list", "watch", "update"]
+
+  - apiGroups: ["certificates.k8s.io"]
+    resources:
+      - "certificatesigningrequests"
+      - "certificatesigningrequests/approval"
+      - "certificatesigningrequests/status"
+    verbs: ["list", "update", "create", "get", "delete", "watch"]
+  - apiGroups: ["certificates.k8s.io"]
+    resources:
+      - "signers"
+    resourceNames:
+    - "keyfactor.com/*"
+    verbs: ["approve", "sign"]
+
+  # To review JWT token from Istio
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["tokenreviews"]
+    verbs: ["create"]
