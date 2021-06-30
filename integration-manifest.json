@@ -3,5 +3,6 @@
     "integration_type": "api-client",
     "name": "k8s-csr-signer",
     "status": "pilot",
+    "link_github":true,
     "description": "Signer for Kubernetes CSR signing API that passes certificate requests to the Keyfactor Web API for signing with a trusted enterprise CA" 
 }
