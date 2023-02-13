@@ -46,6 +46,33 @@ Information can be found in the Keyfactor reference guide.
 | provisioningAppKey   | ApiKey from Api Setting, to enroll certificates for Istio.               | `uYl+FKUbuFpRWg==`                                      |
 | provisioningTemplate | CA Template for auto provisioning TLS server / client certificates.      | `KubernetesNode`                                        |
 
+Full example `credentials/credentials.yaml`:
+```yaml
+# Endpoint of Keyfactor Platform
+endPoint: "https://lab.kfdelivery.com"
+
+# Name of certificate authority for enrollment
+caName: "CommandCA1"
+
+# Basic auth credentials for authentication header
+authToken: "Basic RE9NQUlOXFVzZXI6UGFzc3dvcmQ="
+
+# API path to enroll new certificate from Keyfactor
+enrollPath: "KeyfactorAPI/Enrollment/CSR"
+
+# Certificate Template for Istio certificate enrollment
+caTemplate: "2YearTestWebServer"
+
+# ApiKey from Api Setting, to enroll certificates for Istio
+appKey: "uYl+FKUbuFpRWg=="
+
+# ApiKey for auto provisioning TLS server / client certificates
+provisioningAppKey: "uYl+FKUbuFpRWg=="
+
+# CA Template for auto provisioning TLS server / client certificates
+provisioningTemplate: "KubernetesNode"
+```
+
 6. Create the Keyfactor namespace with these credentials as a secret:
 ```bash
 kubectl create namespace keyfactor  
