@@ -54,7 +54,7 @@ helm install keyfactor-k8s -n keyfactor ./keyfactor-kubernetes-0.0.1.tgz -f char
 
 8. When the pod in the keyfactor namespace is up, you can test the configuration with the provided sample CSR. Note that depending on your selected template and Keyfactor configuration, this may not represent a valid request.  
 kubectl apply -f sample/test-csr.yaml  
-kubectl certificate approve TestABCDEFNAME
+kubectl approve TestABCDEFNAME
 
 After a few seconds, you should be able to see two certificates issued in your Keyfactor instance: one for the pod created in the keyfactor namespace to communicate via mTLS within the cluster, and one from the sample CSR (if the CSR issuance failed, your Keyfactor instance will reflect that instead).
 
