@@ -15,16 +15,18 @@
 package keyfactor
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
+	kf "github.com/Keyfactor/keyfactor-go-client-sdk/api/keyfactor"
 	"net/http"
 	"net/url"
 	"path"
+	"strings"
 	"time"
 
 	klogger "github.com/Keyfactor/k8s-proxy/pkg/logger"
@@ -140,8 +142,8 @@ func (cl *CaClient) CSRSign(ctx context.Context, csrPEM string,
 	bytesRepresentation, err := json.Marshal(payload)
 	clientLog.Infof("payload body: %v", string(bytesRepresentation))
 	if err != nil {
-		clientLog.Errorf("error encode json data: %v", err)
-		return nil, fmt.Errorf("error encode json data: %v", err)
+		clientLog.Errorf("error encoding json data: %v", err)
+		return nil, fmt.Errorf("error encoding json data: %v", err)
 	}
 
 	u, err := url.Parse(cl.credentials.Endpoint)
@@ -155,50 +157,113 @@ func (cl *CaClient) CSRSign(ctx context.Context, csrPEM string,
 	enrollCSRPath := u.String()
 
 	clientLog.Infof("start sign Keyfactor CSR request to: %v", enrollCSRPath)
-	requestCSR, err := http.NewRequest("POST", enrollCSRPath, bytes.NewBuffer(bytesRepresentation))
 
+	xKeyfactorRequestedWith := "APIClient"
+	xKeyfactorApiVersion := "1"
+	xCertificateFormat := "PEM"
+
+	// parse the URL
+	parsedURL, err := url.Parse(cl.credentials.Endpoint)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create request with url: %v", enrollCSRPath)
+		clientLog.Errorf("error parsing url: %v %v", cl.credentials.Endpoint, err)
 	}
 
-	requestCSR.Header.Set("authorization", cl.credentials.AuthToken)
-	requestCSR.Header.Set("x-keyfactor-requested-with", "APIClient")
+	// extract the hostname
+	hostname := parsedURL.Hostname()
+	hostnameParts := strings.Split(hostname, ".")
 
-	if isServerTLS {
-		requestCSR.Header.Set("x-Keyfactor-appKey", cl.credentials.ProvisioningAppKey)
+	var domain = ""
+	if len(hostnameParts) >= 2 {
+		domain = strings.Join(hostnameParts[len(hostnameParts)-2:], ".")
 	} else {
-		requestCSR.Header.Set("x-Keyfactor-appKey", cl.credentials.AppKey)
+		clientLog.Errorf("Invalid hostname: %v", hostname)
 	}
-	requestCSR.Header.Set("x-certificateformat", "PEM")
-	requestCSR.Header.Set("Content-Type", "application/json")
 
-	res, err := cl.Client.Do(requestCSR)
+	// grab the Base64-encoded part of the authToken
+	authTokenParts := strings.Split(cl.credentials.AuthToken, " ")
+	if len(authTokenParts) != 2 || authTokenParts[0] != "Basic" {
+		clientLog.Errorf("invalid authentication token")
+	}
+
+	// decode the base64 username and password
+	decodedAuthToken, err := base64.StdEncoding.DecodeString(authTokenParts[1])
+	if err != nil {
+		clientLog.Errorf("error decoding Base64: %v", err)
+	}
+
+	credentials := strings.Split(string(decodedAuthToken), ":")
+	if len(credentials) != 2 {
+		clientLog.Errorf("invalid basicAuth credentials format")
+	}
+
+	// extract the username and password
+	username := credentials[0]
+	password := credentials[1]
+
+	// create a configuration object
+	config := make(map[string]string)
+	config["host"] = hostname
+	config["username"] = username
+	config["password"] = password
+	config["domain"] = domain
+
+	configuration := kf.NewConfiguration(config)
+	if configuration == nil {
+		clientLog.Errorf("configuration %v failed: %v", cl.credentials.Endpoint, err)
+	}
+
+	// create a client
+	client := kf.NewAPIClient(configuration)
+	if client == nil {
+		clientLog.Errorf("unable to establish Keyfactor client: %v %v", cl.credentials.Endpoint, err)
+	}
+
+	includesChain := true
+
+	// convert the stringMap to a map[string]interface{} using json.Marshal and json.Unmarshal.
+	metadataMap := make(map[string]interface{})
+	jsonData, err := json.Marshal(metadata.MappingCustomMetadata(cl.metadataConfiguration))
+	err = json.Unmarshal(jsonData, &metadataMap)
+
+	time := time.Now().UTC()
+
+	req := &kf.ModelsEnrollmentCSREnrollmentRequest{
+		CSR:                        csrPEM,
+		CertificateAuthority:       &cl.credentials.CaName,
+		IncludeChain:               &includesChain,
+		Metadata:                   metadataMap,
+		AdditionalEnrollmentFields: nil,
+		Timestamp:                  &time,
+		Template:                   &cl.credentials.CaTemplate,
+		SANs:                       nil,
+		AdditionalProperties:       nil,
+	}
+
+	resp, httpResp, err := client.EnrollmentApi.EnrollmentPostCSREnroll(context.Background()).XCertificateformat(xCertificateFormat).Request(*req).XKeyfactorRequestedWith(xKeyfactorRequestedWith).XKeyfactorApiVersion(xKeyfactorApiVersion).Execute()
+
 	if err != nil {
 		clientLog.Errorf("could not request to KeyfactorCA server: %v %v", cl.credentials.Endpoint, err)
 		return nil, fmt.Errorf("could not request to KeyfactorCA server: %v %v", cl.credentials.Endpoint, err)
 	}
-	defer res.Body.Close()
-	status := res.StatusCode
+
+	status := httpResp.StatusCode
 
 	if status == http.StatusOK {
-		jsonResponse := &EnrollResponse{}
-		err := json.NewDecoder(res.Body).Decode(&jsonResponse)
-
+		mapResp, _ := resp.ToMap()
+		jsonData, err := json.Marshal(mapResp)
 		if err != nil {
 			clientLog.Errorf("could not decode response data from KeyfactorCA: %v", err)
 			return nil, fmt.Errorf("could not decode response data from KeyfactorCA: %v", err)
 		}
-		jsonResponse.CertificateInformation.Certificates = getCertFromResponse(jsonResponse)
-		return jsonResponse, nil
+
+		var jsonResponse EnrollResponse
+		json.Unmarshal(jsonData, &jsonResponse)
+
+		jsonResponse.CertificateInformation.Certificates = getCertFromResponse(&jsonResponse)
+		return &jsonResponse, nil
 	}
 
-	var errorMessage interface{}
-	err = json.NewDecoder(res.Body).Decode(&errorMessage)
-	if err != nil {
-		clientLog.Errorf("cannot decode error message from keyfactorCA: %v", err)
-	}
-	clientLog.Errorf("request failed with status: %v, message: %v", status, errorMessage)
-	return nil, fmt.Errorf("request failed with status: %v, message: %v", status, errorMessage)
+	return nil, fmt.Errorf("request failed with status: %v, message: %v", status, err)
 }
 
 func getCertFromResponse(jsonResponse *EnrollResponse) []string {

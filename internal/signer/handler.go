@@ -22,8 +22,10 @@ import (
 
 	"github.com/Keyfactor/k8s-proxy/pkg/keyfactor"
 	klogger "github.com/Keyfactor/k8s-proxy/pkg/logger"
-	capi "k8s.io/api/certificates/v1beta1"
-	certificates "k8s.io/api/certificates/v1beta1"
+	//capi "k8s.io/api/certificates/v1beta1"
+	capi "k8s.io/api/certificates/v1"
+	//certificates "k8s.io/api/certificates/v1beta1"
+	certificates "k8s.io/api/certificates/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -35,10 +37,10 @@ func (c *CertificateController) handleCSR(csr *capi.CertificateSigningRequest) e
 	if !IsCertificateRequestApproved(csr) {
 		return nil
 	}
-	hanlderLog.Infof("Request Certificate - signerName: %s", *csr.Spec.SignerName)
-	if !strings.Contains(*csr.Spec.SignerName, KeyfactorSignerNameScope) {
-		hanlderLog.Errorf("Request Certificate - out of signer name scope: %s", *csr.Spec.SignerName)
-		return fmt.Errorf("Invalid certificate SignerName: %s", *csr.Spec.SignerName)
+	hanlderLog.Infof("Request Certificate - signerName: %s", csr.Spec.SignerName)
+	if !strings.Contains(csr.Spec.SignerName, KeyfactorSignerNameScope) {
+		hanlderLog.Errorf("Request Certificate - out of signer name scope: %s", csr.Spec.SignerName)
+		return fmt.Errorf("Invalid certificate SignerName: %s", csr.Spec.SignerName)
 	}
 
 	var usages []string
@@ -63,7 +65,7 @@ func (c *CertificateController) handleCSR(csr *capi.CertificateSigningRequest) e
 	certChain := res.CertificateInformation.Certificates
 	csr.Status.Certificate = []byte(strings.Join(certChain, ""))
 
-	_, err = c.kubeClient.CertificatesV1beta1().CertificateSigningRequests().UpdateStatus(context.TODO(), csr, v1.UpdateOptions{})
+	_, err = c.kubeClient.CertificatesV1().CertificateSigningRequests().UpdateStatus(context.TODO(), csr, v1.UpdateOptions{})
 
 	if err != nil {
 		hanlderLog.Errorf("error updating signature for csr: %v", err)

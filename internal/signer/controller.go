@@ -31,10 +31,12 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 
-	certificates "k8s.io/api/certificates/v1beta1"
+	//certificates "k8s.io/api/certificates/v1beta1"
+	certificates "k8s.io/api/certificates/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
-	certificateslisters "k8s.io/client-go/listers/certificates/v1beta1"
+	//certificateslisters "k8s.io/client-go/listers/certificates/v1beta1"
+	certificateslisters "k8s.io/client-go/listers/certificates/v1"
 )
 
 var (
@@ -48,7 +50,7 @@ const (
 	KeyfactorSignerNameScope = "keyfactor.com"
 )
 
-// CertificateController contains config for Certificate Siging Request Controller
+// CertificateController contains config for Certificate Signing Request Controller
 type CertificateController struct {
 	kubeClient      clientset.Interface
 	csrLister       certificateslisters.CertificateSigningRequestLister
@@ -66,7 +68,7 @@ func NewCertificateController(kubeClient clientset.Interface, keyfactorClient ke
 	eventBroadcaster.StartRecordingToSink(&v1core.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 
 	informerFactory := informers.NewSharedInformerFactory(kubeClient, 0)
-	csrInformer := informerFactory.Certificates().V1beta1().CertificateSigningRequests()
+	csrInformer := informerFactory.Certificates().V1().CertificateSigningRequests()
 
 	cc := &CertificateController{
 		kubeClient: kubeClient,
@@ -84,22 +86,22 @@ func NewCertificateController(kubeClient clientset.Interface, keyfactorClient ke
 	csrInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			csr := obj.(*certificates.CertificateSigningRequest)
-			if !strings.Contains(*csr.Spec.SignerName, KeyfactorSignerNameScope) {
-				signerLogger.Warnf("ADD NEW CSR: Out of scope of Keyfactor Signer - %s", *csr.Spec.SignerName)
+			if !strings.Contains(csr.Spec.SignerName, KeyfactorSignerNameScope) {
+				signerLogger.Warnf("ADD NEW CSR: Out of scope of Keyfactor Signer - %s", csr.Spec.SignerName)
 				return
 			}
 
 			if IsCertificateRequestApproved(csr) {
 				return
 			}
-			signerLogger.Infof("Adding CSR name '%s', signer '%s'. Waiting for approval...", csr.Name, *csr.Spec.SignerName)
+			signerLogger.Infof("Adding CSR name '%s', signer '%s'. Waiting for approval...", csr.Name, csr.Spec.SignerName)
 		},
 		UpdateFunc: func(old, new interface{}) {
 			newCSR := new.(*certificates.CertificateSigningRequest)
 			oldCSR := old.(*certificates.CertificateSigningRequest)
 			signerLogger.Infof("Updating certificate request: NEW - %#v", newCSR.Name)
-			if !strings.Contains(*newCSR.Spec.SignerName, KeyfactorSignerNameScope) {
-				signerLogger.Warnf("Out of scope of Keyfactor Signer - %s", *newCSR.Spec.SignerName)
+			if !strings.Contains(newCSR.Spec.SignerName, KeyfactorSignerNameScope) {
+				signerLogger.Warnf("Out of scope of Keyfactor Signer - %s", newCSR.Spec.SignerName)
 				return
 			}
 
@@ -112,8 +114,8 @@ func NewCertificateController(kubeClient clientset.Interface, keyfactorClient ke
 		},
 		DeleteFunc: func(obj interface{}) {
 			csr, ok := obj.(*certificates.CertificateSigningRequest)
-			if !strings.Contains(*csr.Spec.SignerName, KeyfactorSignerNameScope) {
-				signerLogger.Warnf("Deleting CSR: Out of scope of Keyfactor Signer - %s", *csr.Spec.SignerName)
+			if !strings.Contains(csr.Spec.SignerName, KeyfactorSignerNameScope) {
+				signerLogger.Warnf("Deleting CSR: Out of scope of Keyfactor Signer - %s", csr.Spec.SignerName)
 				return
 			}
 			if !ok {
