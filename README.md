@@ -24,7 +24,15 @@ This signer operates within the [kubernetes certificate signing request API](htt
 
 3. Clone this repository or download and unzip the binary release to a suitable location in your cluster control plane.
 
-4. Install kubectl, helm, and their dependencies if not already present.
+4. Install the following tools and their dependencies, if not already present:
+
+* Docker (to build the container)
+    * [Docker Engine](https://docs.docker.com/engine/install/) or [Docker Desktop](https://docs.docker.com/desktop/)
+* Kubernetes (v1.19 +)
+    * [Kubernetes](https://kubernetes.io/docs/tasks/tools/) or [Minikube](https://minikube.sigs.k8s.io/docs/start/)
+    * Or [Kubernetes with Docker Desktop](https://docs.docker.com/desktop/kubernetes/)
+* Helm (to deploy Kubernetes)
+    * [Helm](https://helm.sh/docs/intro/install/) (v3.1 +)
 
 5. Open credentials/credentials.yaml and enter the following information:
 \# Endpoint of Keyfactor Platform  
@@ -36,11 +44,7 @@ authToken: "Basic RE9NQUlOXFVzZXI6UGFzc3dvcmQ="
 \# API path to enroll new certificate from Keyfactor  
 enrollPath: "/KeyfactorAPI/Enrollment/CSR"  
 \# Certificate Template for Istio certificate enrollment  
-caTemplate: "KubernetesNode"  
-\# ApiKey from Api Setting, to enroll certificates for Istio  
-appKey: "uYl+FKUbuFpRWg=="  
-\# ApiKey for auto provisioning TLS server / client certificates  
-provisioningAppKey: "uYl+FKUbuFpRWg=="  
+caTemplate: "KubernetesNode"
 \# CA Template for auto provisioning TLS server / client certificates  
 provisioningTemplate: "KubernetesNode"
 
