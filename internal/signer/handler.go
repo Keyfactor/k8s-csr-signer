@@ -22,9 +22,7 @@ import (
 
 	"github.com/Keyfactor/k8s-proxy/pkg/keyfactor"
 	klogger "github.com/Keyfactor/k8s-proxy/pkg/logger"
-	//capi "k8s.io/api/certificates/v1beta1"
 	capi "k8s.io/api/certificates/v1"
-	//certificates "k8s.io/api/certificates/v1beta1"
 	certificates "k8s.io/api/certificates/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

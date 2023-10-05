@@ -31,11 +31,9 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 
-	//certificates "k8s.io/api/certificates/v1beta1"
 	certificates "k8s.io/api/certificates/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1core "k8s.io/client-go/kubernetes/typed/core/v1"
-	//certificateslisters "k8s.io/client-go/listers/certificates/v1beta1"
 	certificateslisters "k8s.io/client-go/listers/certificates/v1"
 )
 
