@@ -51,7 +51,7 @@ type ServerConfig struct {
 	DisableMTLS                     bool
 }
 
-//LoadConfig load config from file
+// LoadConfig load config from file
 func LoadConfig(cfgFile string) *ServerConfig {
 	sc := DefaultConfig()
 

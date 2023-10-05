@@ -4,7 +4,7 @@
 {{ description }}
 
 <!-- add integration specific information below -->
-*** 
+***
 
 ## Use Cases
 
@@ -27,33 +27,33 @@ This signer operates within the [kubernetes certificate signing request API](htt
 4. Install kubectl, helm, and their dependencies if not already present.
 
 5. Open credentials/credentials.yaml and enter the following information:
-\# Endpoint of Keyfactor Platform  
-endPoint: "http://192.168.0.24"  
-\# Name of certificate authority for enrollment  
-caName: "Keyfactor.thedemodrive.com\\Keyfactor Test Drive CA 2 "  
-\# Basic auth credentials for authentication header: "Basic ...."  
-authToken: "Basic RE9NQUlOXFVzZXI6UGFzc3dvcmQ="  
-\# API path to enroll new certificate from Keyfactor  
-enrollPath: "/KeyfactorAPI/Enrollment/CSR"  
-\# Certificate Template for Istio certificate enrollment  
-caTemplate: "KubernetesNode"  
-\# ApiKey from Api Setting, to enroll certificates for Istio  
-appKey: "uYl+FKUbuFpRWg=="  
-\# ApiKey for auto provisioning TLS server / client certificates  
-provisioningAppKey: "uYl+FKUbuFpRWg=="  
-\# CA Template for auto provisioning TLS server / client certificates  
+\# Endpoint of Keyfactor Platform
+endPoint: "http://192.168.0.24"
+\# Name of certificate authority for enrollment
+caName: "Keyfactor.thedemodrive.com\\Keyfactor Test Drive CA 2 "
+\# Basic auth credentials for authentication header: "Basic ...."
+authToken: "Basic RE9NQUlOXFVzZXI6UGFzc3dvcmQ="
+\# API path to enroll new certificate from Keyfactor
+enrollPath: "/KeyfactorAPI/Enrollment/CSR"
+\# Certificate Template for Istio certificate enrollment
+caTemplate: "KubernetesNode"
+\# ApiKey from Api Setting, to enroll certificates for Istio
+appKey: "uYl+FKUbuFpRWg=="
+\# ApiKey for auto provisioning TLS server / client certificates
+provisioningAppKey: "uYl+FKUbuFpRWg=="
+\# CA Template for auto provisioning TLS server / client certificates
 provisioningTemplate: "KubernetesNode"
 
-6. Create the keyfactor namespace with these credentials as a secret:  
-kubectl create namespace keyfactor  
+6. Create the keyfactor namespace with these credentials as a secret:
+kubectl create namespace keyfactor
 kubectl create secret generic keyfactor-credentials -n keyfactor --from-file credentials/credentials.yaml
 
-7. Install Keyfactor signer with helm  
-helm package charts  
+7. Install Keyfactor signer with helm
+helm package charts
 helm install keyfactor-k8s -n keyfactor ./keyfactor-kubernetes-0.0.1.tgz -f charts/values.yaml
 
-8. When the pod in the keyfactor namespace is up, you can test the configuration with the provided sample CSR. Note that depending on your selected template and Keyfactor configuration, this may not represent a valid request.  
-kubectl apply -f sample/test-csr.yaml  
+8. When the pod in the keyfactor namespace is up, you can test the configuration with the provided sample CSR. Note that depending on your selected template and Keyfactor configuration, this may not represent a valid request.
+kubectl apply -f sample/test-csr.yaml
 kubectl approve TestABCDEFNAME
 
 After a few seconds, you should be able to see two certificates issued in your Keyfactor instance: one for the pod created in the keyfactor namespace to communicate via mTLS within the cluster, and one from the sample CSR (if the CSR issuance failed, your Keyfactor instance will reflect that instead).

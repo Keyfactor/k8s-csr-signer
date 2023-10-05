@@ -22,7 +22,7 @@ import (
 	keyfactorMock "github.com/Keyfactor/k8s-proxy/pkg/keyfactor/mock"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/api/certificates/v1beta1"
+	v1cert "k8s.io/api/certificates/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sFake "k8s.io/client-go/kubernetes/fake"
 )
@@ -32,30 +32,30 @@ func TestHandleCSR(t *testing.T) {
 	validSignerName := "keyfactor.com/certificate-name"
 
 	testcases := map[string]struct {
-		csr                 *v1beta1.CertificateSigningRequest
+		csr                 *v1cert.CertificateSigningRequest
 		expectError         string
 		expectCSRMetadata   *keyfactor.CSRMetadata
 		expectCallKeyfactor bool
 	}{
 		"UnApproved CSR": {
-			csr: &v1beta1.CertificateSigningRequest{
-				Spec: v1beta1.CertificateSigningRequestSpec{
-					SignerName: &validSignerName,
+			csr: &v1cert.CertificateSigningRequest{
+				Spec: v1cert.CertificateSigningRequestSpec{
+					SignerName: validSignerName,
 					Request:    []byte("FAKE_CSR"),
 				},
 			},
 			expectCallKeyfactor: false,
 		},
 		"UnMatched signerName": {
-			csr: &v1beta1.CertificateSigningRequest{
-				Spec: v1beta1.CertificateSigningRequestSpec{
-					SignerName: &invalidSignerName,
+			csr: &v1cert.CertificateSigningRequest{
+				Spec: v1cert.CertificateSigningRequestSpec{
+					SignerName: invalidSignerName,
 					Request:    []byte("FAKE_CSR"),
 				},
-				Status: v1beta1.CertificateSigningRequestStatus{
-					Conditions: []v1beta1.CertificateSigningRequestCondition{
+				Status: v1cert.CertificateSigningRequestStatus{
+					Conditions: []v1cert.CertificateSigningRequestCondition{
 						{
-							Type:    v1beta1.CertificateApproved,
+							Type:    v1cert.CertificateApproved,
 							Reason:  "AutoApproved",
 							Message: "TestApproved",
 						},
@@ -65,19 +65,19 @@ func TestHandleCSR(t *testing.T) {
 			expectError: "Invalid certificate SignerName: scope-hostname.io/unmatch-name",
 		},
 		"Should run successful": {
-			csr: &v1beta1.CertificateSigningRequest{
-				Spec: v1beta1.CertificateSigningRequestSpec{
-					SignerName: &validSignerName,
+			csr: &v1cert.CertificateSigningRequest{
+				Spec: v1cert.CertificateSigningRequestSpec{
+					SignerName: validSignerName,
 					Request:    []byte("FAKE_CSR"),
-					Extra: map[string]v1beta1.ExtraValue{
+					Extra: map[string]v1cert.ExtraValue{
 						"ServiceName": []string{"KHOA"},
 						"OutOfScope":  []string{"SHOULD_IGNORE"},
 					},
 				},
-				Status: v1beta1.CertificateSigningRequestStatus{
-					Conditions: []v1beta1.CertificateSigningRequestCondition{
+				Status: v1cert.CertificateSigningRequestStatus{
+					Conditions: []v1cert.CertificateSigningRequestCondition{
 						{
-							Type:    v1beta1.CertificateApproved,
+							Type:    v1cert.CertificateApproved,
 							Reason:  "AutoApproved",
 							Message: "TestApproved",
 						},
@@ -104,7 +104,7 @@ func TestHandleCSR(t *testing.T) {
 				keyfactorClient: mockClient,
 				kubeClient:      k8sFake.NewSimpleClientset(),
 			}
-			csrKube, err := controller.kubeClient.CertificatesV1beta1().CertificateSigningRequests().Create(context.TODO(), tc.csr, v1.CreateOptions{})
+			csrKube, err := controller.kubeClient.CertificatesV1().CertificateSigningRequests().Create(context.TODO(), tc.csr, v1.CreateOptions{})
 			as.Equal(err, nil)
 
 			err = controller.handleCSR(csrKube)

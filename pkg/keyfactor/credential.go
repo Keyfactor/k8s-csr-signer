@@ -39,13 +39,9 @@ type ClientCredential struct {
 	// CaTemplate Certificate Template for enroll the new one Default is Istio
 	CaTemplate string
 
-	// AppKey ApiKey from Api Setting
-	AppKey string
-
 	// EnrollPath api path to Enroll CSR Request
 	EnrollPath string
 
-	ProvisioningAppKey   string
 	ProvisioningTemplate string
 }
 

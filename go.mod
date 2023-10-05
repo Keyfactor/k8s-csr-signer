@@ -3,6 +3,7 @@ module github.com/Keyfactor/k8s-proxy
 go 1.14
 
 require (
+	github.com/Keyfactor/keyfactor-go-client-sdk v1.0.2
 	github.com/gogo/protobuf v1.3.1
 	github.com/klauspost/compress v1.10.11 // indirect
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
