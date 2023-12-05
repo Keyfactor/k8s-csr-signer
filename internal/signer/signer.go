@@ -337,16 +337,6 @@ func (s *commandSigner) Sign(csr certificates.CertificateSigningRequest) ([]byte
 	return pemChain, nil
 }
 
-func (s *commandSigner) deprecatedAnnotationGetter(annotations map[string]string, annotation string) string {
-	annotationValue, ok := annotations[annotation]
-	if ok {
-		s.logger.Info(fmt.Sprintf("Annotations specified without the %q prefix is deprecated and will be removed in the future. Using %q as %q", annotationPrefix, annotationValue, annotation))
-		return annotationValue
-	}
-
-	return ""
-}
-
 func getCertificatesFromCertificateInformation(commandResp *keyfactor.ModelsPkcs10CertificateResponse) ([]*x509.Certificate, error) {
 	var certBytes []byte
 

@@ -5,9 +5,7 @@ metadata:
   labels:
     {{- include "command-csr-signer.labels" . | nindent 4 }}
 spec:
-{{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
-{{- end }}
   selector:
     matchLabels:
       {{- include "command-csr-signer.selectorLabels" . | nindent 6 }}

@@ -62,7 +62,7 @@ Follow the steps in the [Getting Started](getting-started.markdown) guide to bui
     The signer names can be modified according do your cluster's needs, but you _must_ ensure that the signer names match the signer names configured in the `command.signerNames` in the Command K8s CSR Signer Helm chart. By default, no signer names are configured in the Command K8s CSR Signer; all signer names are in scope.
 
     ```yaml
-    cat <<EOF > ./ejbca-istio.yaml
+    cat <<EOF > ./command-istio.yaml
     apiVersion: install.istio.io/v1alpha1
     kind: IstioOperator
     spec:
@@ -115,7 +115,7 @@ Follow the steps in the [Getting Started](getting-started.markdown) guide to bui
                       verbs:
                       - approve
     EOF
-    istioctl install --skip-confirmation -f ./ejbca-istio.yaml
+    istioctl install --skip-confirmation -f ./command-istio.yaml
     ```
 
 ## 3. Deploy the Bookinfo demo application

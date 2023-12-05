@@ -110,6 +110,8 @@ The Command K8s CSR Signer is installed using a Helm chart. The chart is availab
             --namespace command-signer-system \
             --set image.repository=<your container registry>/keyfactor/k8s-csr-signer \
             --set image.tag=<tag> \
+            --set command.credsSecretName=command-credentials \
+            --set command.configMapName=command-signer-config \
             --set command.signerNames[0]=internalsigner.com
         ```
 
