@@ -46,7 +46,7 @@ make docker-build DOCKER_REGISTRY=<your container registry> DOCKER_IMAGE_NAME=ke
 
     * If you want to configure the signer to authenticate to Command using HTTP Basic Auth, create a `kubernetes.io/basic-auth` secret.
 
-      Create a `kubernetes.io/basic-auth` secret containing the username and password. The secret must be created in the same namespace as the Helm chart.
+      Create a `kubernetes.io/basic-auth` secret containing the username and password. If the domain is required by the Command auth method, the username should be in the form `domain\username`. The secret must be created in the same namespace as the Helm chart.
 
         ```shell
         kubectl -n command-signer-system create secret generic --type=kubernetes.io/basic-auth command-credentials \

@@ -3,7 +3,7 @@ kind: CertificateSigningRequest
 metadata:
   name: commandCsrTest
   annotations:
-    k8s-csr-signer.keyfactor.com/certificateTemplate: 2YearTestWebServer
+    k8s-csr-signer.keyfactor.com/certificateTemplate: ClientAuth
     k8s-csr-signer.keyfactor.com/certificateAuthorityHostname: DC-CA.Command.local
     k8s-csr-signer.keyfactor.com/certificateAuthorityLogicalName: CommandCA1
 
