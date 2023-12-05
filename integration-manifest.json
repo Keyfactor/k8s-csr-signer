@@ -4,5 +4,7 @@
     "name": "k8s-csr-signer",
     "status": "pilot",
     "link_github":true,
-    "description": "Signer for Kubernetes CSR signing API that passes certificate requests to the Keyfactor Web API for signing with a trusted enterprise CA" 
+    "description": "Signer for Kubernetes CSR signing API that passes certificate requests to the Keyfactor Command API for signing with a trusted enterprise CA",
+    "support_level": "kf-community",
+    "release_dir": ""
 }
