@@ -1,0 +1,47 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "ejbca-csr-signer.name" . }}-controller-role
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ejbca-csr-signer.labels" . | nindent 4 }}
+rules:
+  # The controller needs to be able to read secrets and configmaps to get authentication information
+  # and to configure itself
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+
+  # configuration validation webhook controller
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingwebhookconfigurations"]
+    verbs: ["get", "list", "watch", "update"]
+
+  - apiGroups: ["certificates.k8s.io"]
+    resources:
+      - "certificatesigningrequests"
+      - "certificatesigningrequests/approval"
+      - "certificatesigningrequests/status"
+    verbs: ["list", "update", "create", "get", "delete", "watch"]
+
+  - apiGroups: ["certificates.k8s.io"]
+    resources:
+      - "signers"
+    {{- with .Values.ejbca.signerNames }}
+    resourceNames:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    verbs: ["approve", "sign"]

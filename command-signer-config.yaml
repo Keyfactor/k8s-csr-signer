@@ -1,0 +1,26 @@
+# This configuration file contains default values that configure how certificates are signed by Command,
+# and how signed certificates are stored back into Kubernetes.
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: command-signer-config
+data:
+  # Hostname of the Command instance
+  commandHostname: ""
+
+  # Default certificate template to use for enrollment
+  defaultCertificateTemplate: ""
+
+  # Default certificate authority logical name to use for enrollment
+  defaultCertificateAuthorityLogicalName: ""
+
+  # Default certificate authority hostname to reference for enrollment
+  defaultCertificateAuthorityHostname: ""
+
+  # The length of the certificate chain included with the leaf certificate.
+  #  chainDepth = 0 => whole chain
+  #  chainDepth = 1 => just the leaf
+  #  chainDepth = 2 => leaf + issuer
+  #  chainDepth = 3 => leaf + issuer + issuer
+  #  etc
+  chainDepth: "0"
