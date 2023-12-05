@@ -2,8 +2,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   labels:
-    {{- include "ejbca-csr-signer.labels" . | nindent 4 }}
-  name: {{ include "ejbca-csr-signer.name" . }}-leader-election-role
+    {{- include "command-csr-signer.labels" . | nindent 4 }}
+  name: {{ include "command-csr-signer.name" . }}-leader-election-role
 rules:
   - apiGroups:
       - coordination.k8s.io

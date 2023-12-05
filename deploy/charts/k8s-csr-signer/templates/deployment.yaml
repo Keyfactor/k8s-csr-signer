@@ -1,26 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "ejbca-csr-signer.fullname" . }}
+  name: {{ include "command-csr-signer.fullname" . }}
   labels:
-    {{- include "ejbca-csr-signer.labels" . | nindent 4 }}
+    {{- include "command-csr-signer.labels" . | nindent 4 }}
 spec:
 {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
 {{- end }}
   selector:
     matchLabels:
-      {{- include "ejbca-csr-signer.selectorLabels" . | nindent 6 }}
+      {{- include "command-csr-signer.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "ejbca-csr-signer.selectorLabels" . | nindent 8 }}
+        {{- include "command-csr-signer.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "ejbca-csr-signer.serviceAccountName" . }}
+      serviceAccountName: {{ include "command-csr-signer.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -33,10 +33,10 @@ spec:
             - --health-probe-bind-address=:8081
             - --metrics-bind-address=127.0.0.1:8080
             - --leader-elect
-            - --credential-secret-name={{ required "credsSecretName is required" .Values.ejbca.credsSecretName  }}
-            - --configmap-name={{ required "configMapName is required" .Values.ejbca.configMapName  }}
-            {{- if .Values.ejbca.caCertConfigmapName }}
-            - --ca-cert-configmap-name={{ .Values.ejbca.caCertConfigmapName  }}
+            - --credential-secret-name={{ required "credsSecretName is required" .Values.command.credsSecretName  }}
+            - --configmap-name={{ required "configMapName is required" .Values.command.configMapName  }}
+            {{- if .Values.command.caCertConfigmapName }}
+            - --ca-cert-configmap-name={{ .Values.command.caCertConfigmapName  }}
             {{- end }}
           livenessProbe:
             httpGet:

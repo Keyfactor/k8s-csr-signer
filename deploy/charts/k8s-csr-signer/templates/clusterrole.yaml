@@ -1,10 +1,10 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "ejbca-csr-signer.name" . }}-controller-role
+  name: {{ include "command-csr-signer.name" . }}-controller-role
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "ejbca-csr-signer.labels" . | nindent 4 }}
+    {{- include "command-csr-signer.labels" . | nindent 4 }}
 rules:
   # The controller needs to be able to read secrets and configmaps to get authentication information
   # and to configure itself
@@ -40,7 +40,7 @@ rules:
   - apiGroups: ["certificates.k8s.io"]
     resources:
       - "signers"
-    {{- with .Values.ejbca.signerNames }}
+    {{- with .Values.command.signerNames }}
     resourceNames:
       {{- toYaml . | nindent 6 }}
     {{- end }}
