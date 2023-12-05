@@ -19,6 +19,61 @@
 * Helm (to deploy to Kubernetes)
     * [Helm](https://helm.sh/docs/intro/install/) (v3.1 +)
 
+### Keyfactor Command Configuration
+The Command K8s CSR Signer populates metadata fields on issued certificates in Command pertaining to the K8s cluster and CertificateSigningRequest reconcile loops. Before deploying any CSRs in the cluster, these metadata fields must be created in Command. To easily create these metadata fields, use the `kfutil` Keyfactor command line tool that offers convenient and powerful command line access to the Keyfactor platform. Before proceeding, ensure that `kfutil` is installed and configured by following the instructions here: [https://github.com/Keyfactor/kfutil](https://github.com/Keyfactor/kfutil).
+
+Then, use the `import` command to import the metadata fields into Command:
+```shell
+cat <<EOF >> metadata.json
+{
+    "Collections": [],
+    "MetadataFields": [
+        {
+            "AllowAPI": true,
+            "DataType": 1,
+            "Description": "The reconcile ID of the reconcile loop that signed the certificate.",
+            "Name": "Controller-Reconcile-Id"
+        },
+        {
+            "AllowAPI": true,
+            "DataType": 1,
+            "Description": "The namespace that the controller reconciler is running in.",
+            "Name": "Controller-Namespace"
+        },
+        {
+            "AllowAPI": true,
+            "DataType": 1,
+            "Description": "The name of the resource that a K8s controller is reconciling.",
+            "Name": "Controller-Kind"
+        },
+        {
+            "AllowAPI": true,
+            "DataType": 1,
+            "Description": "The group name of the resource that a K8s controller is reconciling.",
+            "ExplicitUpdate": false,
+            "Name": "Controller-Resource-Group-Name"
+        },
+        {
+            "AllowAPI": true,
+            "DataType": 1,
+            "Description": "The name of the resource being reconciled in Kubernetes",
+            "Name": "Controller-Resource-Name",
+        }
+    ],
+    "ExpirationAlerts": [],
+    "IssuedCertAlerts": [],
+    "DeniedCertAlerts": [],
+    "PendingCertAlerts": [],
+    "Networks": [],
+    "WorkflowDefinitions": [],
+    "BuiltInReports": [],
+    "CustomReports": [],
+    "SecurityRoles": []
+}
+EOF
+kfutil import --metadata --file metadata.json
+```
+
 ## Getting Started
 Install required software and their dependencies if not already present. Additionally, verify that at least one Kubernetes node is running by running the following command:
 

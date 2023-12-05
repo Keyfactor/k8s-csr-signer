@@ -23,8 +23,9 @@ var _ Builder = &commandSigner{}
 var _ Signer = &commandSigner{}
 
 const (
-	enrollmentPEMFormat = "PEM"
-	annotationPrefix    = "k8s-csr-signer.keyfactor.com/"
+	enrollmentPEMFormat             = "PEM"
+	annotationPrefix                = "k8s-csr-signer.keyfactor.com/"
+	commandMetadataAnnotationPrefix = "metadata.k8s-csr-signer.keyfactor.com/"
 )
 
 type Builder interface {
@@ -33,6 +34,7 @@ type Builder interface {
 	WithCredsSecret(corev1.Secret) Builder
 	WithConfigMap(corev1.ConfigMap) Builder
 	WithCACertConfigMap(corev1.ConfigMap) Builder
+	WithMetadata(meta K8sMetadata) Builder
 	PreFlight() error
 	Build() Signer
 }
@@ -41,10 +43,29 @@ type Signer interface {
 	Sign(csr certificates.CertificateSigningRequest) ([]byte, error)
 }
 
+type K8sMetadata struct {
+	ControllerNamespace         string
+	ControllerKind              string
+	ControllerResourceGroupName string
+	ControllerReconcileId       string
+	ControllerResourceName      string
+}
+
+const (
+	CommandMetaControllerNamespace         = "Controller-Namespace"
+	CommandMetaControllerKind              = "Controller-Kind"
+	CommandMetaControllerResourceGroupName = "Controller-Resource-Group-Name"
+	CommandMetaControllerReconcileId       = "Controller-Reconcile-Id"
+	CommandMetaControllerResourceName      = "Controller-Resource-Name"
+)
+
 type commandSigner struct {
 	ctx    context.Context
 	logger logr.Logger
 	creds  corev1.Secret
+
+	// Meta
+	meta K8sMetadata
 
 	// Given from config
 	hostname                               string
@@ -162,6 +183,11 @@ func (s *commandSigner) WithCACertConfigMap(config corev1.ConfigMap) Builder {
 	return s
 }
 
+func (s *commandSigner) WithMetadata(meta K8sMetadata) Builder {
+	s.meta = meta
+	return s
+}
+
 func (s *commandSigner) PreFlight() error {
 	var err error
 
@@ -270,6 +296,25 @@ func (s *commandSigner) Sign(csr certificates.CertificateSigningRequest) ([]byte
 			s.chainDepth = chainDepth
 		}
 	}
+
+	// Construct metadata map
+	meta := map[string]interface{}{
+		CommandMetaControllerNamespace:         s.meta.ControllerNamespace,
+		CommandMetaControllerKind:              s.meta.ControllerKind,
+		CommandMetaControllerResourceGroupName: s.meta.ControllerResourceGroupName,
+		CommandMetaControllerReconcileId:       s.meta.ControllerReconcileId,
+		CommandMetaControllerResourceName:      s.meta.ControllerResourceName,
+	}
+
+	// Set custom metadata from annotations
+	for key, value := range annotations {
+		if strings.HasPrefix(key, commandMetadataAnnotationPrefix) {
+			meta[strings.TrimPrefix(key, commandMetadataAnnotationPrefix)] = value
+		}
+	}
+
+	// Set metadata on enrollment request
+	enroll.SetMetadata(meta)
 
 	// Construct CA name from hostname and logical name
 	var caBuilder strings.Builder

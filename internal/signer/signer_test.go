@@ -193,6 +193,30 @@ func TestCommandSignerBuilder(t *testing.T) {
 			}
 		})
 	})
+
+	t.Run("WithMetadata", func(t *testing.T) {
+		meta := GetFakeMetadata()
+
+		signer.WithContext(ctrl.LoggerInto(context.TODO(), logrtesting.New(t)))
+
+		signer.WithMetadata(meta)
+
+		assert.Equal(t, meta.ControllerNamespace, signer.meta.ControllerNamespace)
+		assert.Equal(t, meta.ControllerKind, signer.meta.ControllerKind)
+		assert.Equal(t, meta.ControllerResourceGroupName, signer.meta.ControllerResourceGroupName)
+		assert.Equal(t, meta.ControllerReconcileId, signer.meta.ControllerReconcileId)
+		assert.Equal(t, meta.ControllerResourceName, signer.meta.ControllerResourceName)
+	})
+}
+
+func GetFakeMetadata() K8sMetadata {
+	return K8sMetadata{
+		ControllerNamespace:         "fake-namespace",
+		ControllerKind:              "fake-kind",
+		ControllerResourceGroupName: "fake-resource-group",
+		ControllerReconcileId:       "fake-reconcile-id",
+		ControllerResourceName:      "fake-resource-name",
+	}
 }
 
 func TestCommandSigner(t *testing.T) {
@@ -238,7 +262,8 @@ func TestCommandSigner(t *testing.T) {
 			WithContext(ctrl.LoggerInto(context.TODO(), logrtesting.New(t))).
 			WithCredsSecret(creds).
 			WithConfigMap(signerConfig).
-			WithCACertConfigMap(caConfig)
+			WithCACertConfigMap(caConfig).
+			WithMetadata(GetFakeMetadata())
 
 		err = builder.PreFlight()
 		if err != nil {
@@ -281,10 +306,11 @@ func TestCommandSigner(t *testing.T) {
 
 	// Create supported annotations
 	supportedAnnotations := map[string]string{
-		"k8s-csr-signer.keyfactor.com/certificateTemplate":             commandConfig.commandCertificateTemplate,
-		"k8s-csr-signer.keyfactor.com/certificateAuthorityHostname":    commandConfig.commandCertificateAuthorityHostname,
-		"k8s-csr-signer.keyfactor.com/certificateAuthorityLogicalName": commandConfig.commandCertificateAuthorityLogicalName,
-		"k8s-csr-signer.keyfactor.com/chainDepth":                      "5",
+		annotationPrefix + "certificateTemplate":             commandConfig.commandCertificateTemplate,
+		annotationPrefix + "certificateAuthorityHostname":    commandConfig.commandCertificateAuthorityHostname,
+		annotationPrefix + "certificateAuthorityLogicalName": commandConfig.commandCertificateAuthorityLogicalName,
+		annotationPrefix + "chainDepth":                      "5",
+		commandMetadataAnnotationPrefix + "Email-Contact":    "k8s-csr-signer@keyfactor.com",
 	}
 
 	t.Run("BasicAuthWithAnnotations", func(t *testing.T) {
@@ -309,7 +335,8 @@ func TestCommandSigner(t *testing.T) {
 			WithContext(ctrl.LoggerInto(context.TODO(), logrtesting.New(t))).
 			WithCredsSecret(estCreds).
 			WithConfigMap(signerConfig).
-			WithCACertConfigMap(caConfig)
+			WithCACertConfigMap(caConfig).
+			WithMetadata(GetFakeMetadata())
 
 		err = builder.PreFlight()
 		if err != nil {

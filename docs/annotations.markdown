@@ -31,6 +31,15 @@ Here are the supported annotations that can override the default values:
     k8s-csr-signer.keyfactor.com/chainDepth: 3
     ```
 
+### Metadata Annotations
+
+The Keyfactor Command K8s CSR Signer also allows you to specify Command Metadata through the use of annotations. Metadata attached to a certificate request will be stored in Command and can be used for reporting and auditing purposes. The syntax for specifying metadata is as follows:
+```yaml
+metadata.k8s-csr-signer.keyfactor.com/<metadata-field-name>: <metadata-value>
+```
+
+Ensure that the metadata specified by the `metadata-field-name` matches a name of a metadata field in Command exactly. If the metadata field name does not match, the CSR enrollment will fail.
+
 ### How to Apply Annotations
 
 To apply these annotations, include them in the metadata section of your CertificateSigningRequest resource:

@@ -50,6 +50,10 @@ func (f *FakeSignerBuilder) WithCACertConfigMap(configMap corev1.ConfigMap) sign
 	return f
 }
 
+func (f *FakeSignerBuilder) WithMetadata(meta signer.K8sMetadata) signer.Builder {
+	return f
+}
+
 func (f *FakeSignerBuilder) PreFlight() error {
 	return nil
 }

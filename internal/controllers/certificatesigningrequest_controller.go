@@ -30,6 +30,7 @@ import (
 	"k8s.io/utils/clock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 )
 
 type CertificateSigningRequestReconciler struct {
@@ -44,6 +45,8 @@ type CertificateSigningRequestReconciler struct {
 
 func (c *CertificateSigningRequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, err error) {
 	reconcileLog := ctrl.LoggerFrom(ctx)
+
+	meta := signer.K8sMetadata{}
 
 	c.SignerBuilder.Reset()
 
@@ -116,12 +119,20 @@ func (c *CertificateSigningRequestReconciler) Reconcile(ctx context.Context, req
 		}
 	}
 
+	// Populate metadata
+	meta.ControllerNamespace = c.ClusterResourceNamespace
+	meta.ControllerKind = "CertificateSigningRequest"
+	meta.ControllerResourceGroupName = "certificatesigningrequests.certificates.k8s.io"
+	meta.ControllerReconcileId = string(controller.ReconcileIDFromContext(ctx))
+	meta.ControllerResourceName = certificateSigningRequest.GetName()
+
 	// Apply the configuration to the signer builder
 	c.SignerBuilder.
 		WithContext(ctx).
 		WithCredsSecret(creds).
 		WithConfigMap(config).
-		WithCACertConfigMap(root)
+		WithCACertConfigMap(root).
+		WithMetadata(meta)
 
 	// Validate that there were no issues with the configuration
 	err = c.SignerBuilder.PreFlight()
