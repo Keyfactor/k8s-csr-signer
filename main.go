@@ -17,6 +17,7 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"github.com/Keyfactor/k8s-csr-signer/internal/controllers"
@@ -97,6 +98,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	ctx := context.Background()
+	configClient, err := util.NewConfigClient(ctx)
+	if err != nil {
+		setupLog.Error(err, "error creating config client")
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		HealthProbeBindAddress: probeAddr,
@@ -130,6 +137,7 @@ func main() {
 
 	if err = (&controllers.CertificateSigningRequestReconciler{
 		Client:                   mgr.GetClient(),
+		ConfigClient:             configClient,
 		Scheme:                   mgr.GetScheme(),
 		SignerBuilder:            commandSignerBuilder,
 		ClusterResourceNamespace: clusterResourceNamespace,

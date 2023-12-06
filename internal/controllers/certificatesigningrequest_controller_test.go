@@ -221,6 +221,7 @@ func TestCertificateSigningRequestReconciler_Reconcile(t *testing.T) {
 				Build()
 			controller := CertificateSigningRequestReconciler{
 				Client:                   fakeClient,
+				ConfigClient:             NewFakeConfigClient(fakeClient),
 				Scheme:                   scheme,
 				ClusterResourceNamespace: tc.clusterResourceNamespace,
 				SignerBuilder:            tc.signerBuilder,

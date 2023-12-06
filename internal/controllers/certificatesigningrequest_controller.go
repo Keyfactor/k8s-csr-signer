@@ -35,6 +35,7 @@ import (
 
 type CertificateSigningRequestReconciler struct {
 	client.Client
+	ConfigClient                                     util.ConfigClient
 	Scheme                                           *runtime.Scheme
 	SignerBuilder                                    signer.Builder
 	ClusterResourceNamespace                         string
@@ -97,23 +98,26 @@ func (c *CertificateSigningRequestReconciler) Reconcile(ctx context.Context, req
 
 	reconcileLog.Info(fmt.Sprintf("Preparing to sign CSR called %q", certificateSigningRequest.GetName()))
 
+	// Set the context on the config client
+	c.ConfigClient.SetContext(ctx)
+
 	// Get the credentials secret
 	var creds corev1.Secret
-	if err = c.Get(ctx, c.CredsSecret, &creds); err != nil {
+	if err = c.ConfigClient.GetSecret(c.CredsSecret, &creds); err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to get Secret containing Signer credentials, secret name: %s, reason: %v", c.CredsSecret.Name, err)
 	}
 
 	// Get the signer configuration
 	var config corev1.ConfigMap
-	if err = c.Get(ctx, c.ConfigMap, &config); err != nil {
+	if err = c.ConfigClient.GetConfigMap(c.ConfigMap, &config); err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to get ConfigMap containing Signer configuration, configmap name: %s, reason: %v", c.ConfigMap.Name, err)
 	}
 
 	// Get the CA certificate
 	var root corev1.ConfigMap
+	// If the CA secret name is not specified, we will not attempt to retrieve it
 	if c.CaCertConfigmap.Name != "" {
-		// If the CA secret name is not specified, we will not attempt to retrieve it
-		err = c.Get(ctx, c.CaCertConfigmap, &root)
+		err = c.ConfigClient.GetConfigMap(c.CaCertConfigmap, &root)
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("caSecretName was provided, but failed to get ConfigMap containing CA certificate, configmap name: %q, reason: %v", c.CaCertConfigmap, err)
 		}
