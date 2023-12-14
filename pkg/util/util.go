@@ -54,6 +54,7 @@ func IsCertificateRequestApproved(csr certificates.CertificateSigningRequest) bo
 	return approved && !denied
 }
 
+// getCertApprovalCondition is a helper function that determines if a certificate request has been approved or denied
 func getCertApprovalCondition(status certificates.CertificateSigningRequestStatus) (approved bool, denied bool) {
 	for _, c := range status.Conditions {
 		if c.Type == certificates.CertificateApproved {
@@ -84,6 +85,7 @@ func CompileCertificatesToPemBytes(certificates []*x509.Certificate) ([]byte, er
 	return []byte(leafAndChain.String()), nil
 }
 
+// DecodePEMBytes takes a byte array containing PEM encoded data and returns a slice of PEM blocks and a private key PEM block
 func DecodePEMBytes(buf []byte) ([]*pem.Block, *pem.Block) {
 	var privKey *pem.Block
 	var certs []*pem.Block
