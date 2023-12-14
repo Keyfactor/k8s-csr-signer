@@ -1,3 +1,19 @@
+/*
+Copyright © 2023 Keyfactor
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package signer
 
 import (
@@ -82,22 +98,29 @@ type commandSigner struct {
 	basicAuthRestClient *keyfactor.APIClient
 }
 
+// NewCommandSignerBuilder returns a new Builder object that can be used
+// to construct a new Signer object
 func NewCommandSignerBuilder() Builder {
 	return &commandSigner{}
 }
 
+// Reset resets the builder to its initial state so that it can be reused
 func (s *commandSigner) Reset() Builder {
 	s.errs = make([]error, 0)
 	s.preflightComplete = false
 	return s
 }
 
+// WithContext sets the context for the builder and creates a logger
+// object from the context
 func (s *commandSigner) WithContext(ctx context.Context) Builder {
 	s.ctx = ctx
 	s.logger = log.FromContext(ctx)
 	return s
 }
 
+// WithCredsSecret sets the credentials secret for the builder and validates
+// that the secret contains the required fields.
 func (s *commandSigner) WithCredsSecret(secret corev1.Secret) Builder {
 	if secret.Type == corev1.SecretTypeBasicAuth {
 		s.logger.Info("Found BasicAuth secret. Using BasicAuth authentication")
@@ -119,6 +142,8 @@ func (s *commandSigner) WithCredsSecret(secret corev1.Secret) Builder {
 	return s
 }
 
+// WithConfigMap sets the config map for the builder and validates that the
+// config map contains the required fields.
 func (s *commandSigner) WithConfigMap(config corev1.ConfigMap) Builder {
 	if host, ok := config.Data["commandHostname"]; ok && host != "" {
 		s.hostname = config.Data["commandHostname"]
@@ -149,6 +174,8 @@ func (s *commandSigner) WithConfigMap(config corev1.ConfigMap) Builder {
 	return s
 }
 
+// WithCACertConfigMap sets the CA certificate config map for the builder and
+// validates that the contents can be parsed as a PEM encoded certificate.
 func (s *commandSigner) WithCACertConfigMap(config corev1.ConfigMap) Builder {
 	if len(config.Data) == 0 {
 		return s
@@ -183,11 +210,15 @@ func (s *commandSigner) WithCACertConfigMap(config corev1.ConfigMap) Builder {
 	return s
 }
 
+// WithMetadata sets the metadata for the builder so it can be
+// passed to Command as metadata
 func (s *commandSigner) WithMetadata(meta K8sMetadata) Builder {
 	s.meta = meta
 	return s
 }
 
+// PreFlight performs a preflight check to ensure that the builder has all
+// the required information to build a signer object.
 func (s *commandSigner) PreFlight() error {
 	var err error
 
@@ -201,6 +232,8 @@ func (s *commandSigner) PreFlight() error {
 	return utilerrors.NewAggregate(s.errs)
 }
 
+// newBasicAuthClient creates a new Command REST API client using basic auth
+// credentials from the builder's credentials secret.
 func (s *commandSigner) newBasicAuthClient() (*keyfactor.APIClient, error) {
 	// Create Command API Client
 	commandConfig := keyfactor.NewConfiguration(make(map[string]string))
@@ -236,6 +269,9 @@ func (s *commandSigner) newBasicAuthClient() (*keyfactor.APIClient, error) {
 	return client, nil
 }
 
+// Build builds a new Signer object from the builder's configuration.
+// Since commandSigner also implements the Signer interface, it can
+// be returned directly.
 func (s *commandSigner) Build() Signer {
 	if !s.preflightComplete {
 		s.logger.Error(fmt.Errorf("preflight not complete"), "preflight must be completed before building signer")
@@ -245,6 +281,7 @@ func (s *commandSigner) Build() Signer {
 	return s
 }
 
+// Sign signs a certificate signing request using the Command REST API.
 func (s *commandSigner) Sign(csr certificates.CertificateSigningRequest) ([]byte, error) {
 	annotations := csr.GetAnnotations()
 
@@ -382,6 +419,8 @@ func (s *commandSigner) Sign(csr certificates.CertificateSigningRequest) ([]byte
 	return pemChain, nil
 }
 
+// getCertificatesFromCertificateInformation takes a keyfactor.ModelsPkcs10CertificateResponse
+// object and returns a slice of x509 certificates.
 func getCertificatesFromCertificateInformation(commandResp *keyfactor.ModelsPkcs10CertificateResponse) ([]*x509.Certificate, error) {
 	var certBytes []byte
 
@@ -402,6 +441,8 @@ func getCertificatesFromCertificateInformation(commandResp *keyfactor.ModelsPkcs
 	return certs, nil
 }
 
+// parseCSR parses a PEM encoded certificate signing request and returns
+// a x509.CertificateRequest object.
 func parseCSR(pemBytes []byte) (*x509.CertificateRequest, error) {
 	// extract PEM from request object
 	block, _ := pem.Decode(pemBytes)

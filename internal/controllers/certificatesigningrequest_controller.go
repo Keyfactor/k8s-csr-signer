@@ -1,5 +1,5 @@
 /*
-Copyright 2023 The Keyfactor Command Authors.
+Copyright © 2023 Keyfactor
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -44,6 +44,8 @@ type CertificateSigningRequestReconciler struct {
 	CredsSecret, ConfigMap, CaCertConfigmap          types.NamespacedName
 }
 
+// Reconcile attempts to sign a CertificateSigningRequest given the configuration provided and a configured
+// Command signer instance.
 func (c *CertificateSigningRequestReconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, err error) {
 	reconcileLog := ctrl.LoggerFrom(ctx)
 
@@ -156,12 +158,16 @@ func (c *CertificateSigningRequestReconciler) Reconcile(ctx context.Context, req
 	return ctrl.Result{}, nil
 }
 
+// SetupWithManager registers the CertificateSigningRequestReconciler with the controller manager.
+// It configures controller-runtime to reconcile CertificateSigningRequests in the cluster.
 func (c *CertificateSigningRequestReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&certificates.CertificateSigningRequest{}).
 		Complete(c)
 }
 
+// IsIssuerInScope checks if the given issuer name is in scope of the controller's service account using
+// the SelfSubjectAccessReview API.
 func (c *CertificateSigningRequestReconciler) IsIssuerInScope(ctx context.Context, issuerName string) (v1.SubjectAccessReviewStatus, error) {
 	scopeLog := ctrl.LoggerFrom(ctx)
 
