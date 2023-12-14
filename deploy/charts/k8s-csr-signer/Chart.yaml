@@ -1,0 +1,12 @@
+apiVersion: v2
+name: k8s-csr-signer
+description: A Helm chart for the Command Kubernetes CSR Signer
+type: application
+version: 2.0.0
+appVersion: "2.0.0"
+
+maintainers:
+  - name: Hayden Roszell
+    email: hayden.roszell@keyfactor.com
+  - name: JD Kilgallin
+    email: jd.kilgallin@keyfactor.com

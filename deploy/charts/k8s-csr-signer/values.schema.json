@@ -1,0 +1,98 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "replicaCount": {
+            "type": "number"
+        },
+        "imagePullSecrets": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "nameOverride": {
+            "type": "string"
+        },
+        "fullnameOverride": {
+            "type": "string"
+        },
+        "image": {
+            "type": "object",
+            "properties": {
+                "repository": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                },
+                "pullPolicy": {
+                    "type": "string",
+                    "enum": ["IfNotPresent", "Always", "Never"]
+                }
+            },
+            "required": ["repository", "tag", "pullPolicy"]
+        },
+        "command": {
+            "type": "object",
+            "properties": {
+                "credsSecretName": {
+                    "type": "string"
+                },
+                "configMapName": {
+                    "type": "string"
+                },
+                "caCertConfigmapName": {
+                    "type": "string"
+                },
+                "signerNames": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": ["credsSecretName", "configMapName", "caCertConfigmapName", "signerNames"]
+        },
+        "serviceAccount": {
+            "type": "object",
+            "properties": {
+                "create": {
+                    "type": "boolean"
+                },
+                "annotations": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "required": ["create", "annotations", "name"]
+        },
+        "podSecurityContext": {
+            "type": "object"
+        },
+        "securityContext": {
+            "type": "object"
+        },
+        "resources": {
+            "type": "object"
+        },
+        "nodeSelector": {
+            "type": "object"
+        },
+        "tolerations": {
+            "type": "array",
+            "items": {
+                "type": "object"
+            }
+        },
+        "affinity": {
+            "type": "object"
+        }
+    },
+    "required": ["replicaCount", "image", "command", "serviceAccount"]
+}

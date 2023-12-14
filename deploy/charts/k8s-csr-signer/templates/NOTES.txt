@@ -1,0 +1,5 @@
+Create and approve a K8s CertificateSigningRequest with one of the following signerNames:
+{{ range $i, $signerName := .Values.command.signerNames }}  - {{ $signerName }}
+{{ end }}
+To see the controller logs, run:
+kubectl logs -n {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "command-csr-signer.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -f
